@@ -1,0 +1,54 @@
+$backround-color: #EEEEEE;
+$newsfeed-background: #00bcd461;
+$white-color: #FFFFFF;
+
+body {
+  background: $backround-color;
+}
+
+.news-feed {
+  text-align: center;
+
+
+  &__element {
+    display: block;
+    background: $newsfeed-background;
+    border-radius: 5px;
+    width: 50%;
+    margin: 20px auto;
+    min-height: 150px;
+    padding: 20px;
+  }
+
+  &__author-image {
+    background: $white-color;
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+  }
+  
+  &__author-info-wrapper {
+    display: flex;
+    text-align: left;
+    padding-bottom: 10px;
+  }
+  
+  &__author-info {
+    margin-left: 5px;
+  }
+  
+  &__author {
+    font-weight: bold;
+  }
+  
+  &__data {
+    font-size: 12px;
+  }
+  
+  &__description {
+    text-align: start;
+  }
+  
+}
+
+
