@@ -1,14 +1,19 @@
 $backround-color: #EEEEEE;
-$newsfeed-background: #00bcd461;
+$newsfeed-background: #4a91c3ba;
 $white-color: #FFFFFF;
 
 body {
   background: $backround-color;
+  margin: 50px 0px;
 }
 
 .news-feed {
   text-align: center;
 
+  &__title {
+    font-size: 24px;
+    font-weight: 500;
+  }
 
   &__element {
     display: block;
@@ -49,6 +54,24 @@ body {
     text-align: start;
   }
   
+}
+
+.comment-section {
+
+  &__textarea {
+    display: block;
+    border-radius: 5px;
+    width: 50%;
+    margin: 20px auto;
+    padding: 20px;
+  }
+
+  &__submit-button {
+    width: 85px;
+    height: 35px;
+    font-size: 16px;
+    font-weight: 500;
+  }
 }
 
 
