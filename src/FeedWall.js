@@ -103,7 +103,7 @@ class FeedWall extends React.Component {
   }
 
   render() {
-    const { newsFeed } = this.state;
+    const { newsFeed, newComment } = this.state;
 
     return (
       <div className="news-feed">
@@ -123,6 +123,7 @@ class FeedWall extends React.Component {
             name="newComment"
             rows="4"
             cols="50"
+            value={newComment}
             onChange={(event) => this.handleInputChange(event)}
           ></textarea>
 
