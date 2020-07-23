@@ -1,9 +1,11 @@
 import React, { Fragment } from "react";
 import moment from "moment";
 
-import GET_POSTS from "./queries/getPosts";
 import { ReactComponent as ReactionInActive } from "../src/assets/reactionInActive.svg";
 import { ReactComponent as ReactionActive } from "../src/assets/reactionActive.svg";
+
+import GET_POSTS from "./queries/getPosts";
+import CREATE_POST from "./mutations/createPost";
 
 class Feed extends React.Component {
   render() {
@@ -13,14 +15,14 @@ class Feed extends React.Component {
       <div className="news-feed__element" key={index}>
         <div className="news-feed__author-info-wrapper">
           <img
-            src={feed.authorImage}
+            src={feed.user.profileImgUrl}
             alt="authorImg"
             className="news-feed__author-image"
           ></img>
           <div className="news-feed__author-info">
-            <div className="news-feed__author">{feed.author}</div>
+            <div className="news-feed__author">{feed.user.name}</div>
             <div className="news-feed__data">
-              {feed && feed.date && moment(feed.date).format("MM/DD/YYYY")}
+              {moment(+feed.date).format("MM/DD/YYYY")}
             </div>
           </div>
         </div>
@@ -44,6 +46,10 @@ class Feed extends React.Component {
 }
 
 class FeedWall extends React.Component {
+  static defaultProps = {
+    currentUserId: "g4trCZLHtwufy1RxhNCk",
+  };
+
   state = {
     newsFeed: [],
     newComment: "",
@@ -56,7 +62,6 @@ class FeedWall extends React.Component {
         options: { fetchPolicy: "cache-and-network" },
       })
       .then(({ data }) => {
-        console.log(data.posts);
         this.setState({ newsFeed: data.posts });
       });
   }
@@ -69,13 +74,32 @@ class FeedWall extends React.Component {
   }
 
   handleReaction(check, index) {
-    // TODO: Mutation
+    // TODO: mutation
     console.log(check);
     console.log(index);
   }
 
   handlePost() {
-    console.log(this.state.newComment);
+    const postCommentObject = {
+      user: this.props.currentUserId,
+      description: this.state.newComment,
+    };
+
+    this.props.client
+      .mutate({
+        mutation: CREATE_POST,
+        variables: postCommentObject,
+        refetchQuery: "cache-and-network",
+      })
+      .then(({ data: { createPost } }) => {
+        const newsFeed = [...this.state.newsFeed, createPost];
+
+        this.setState({
+          newsFeed,
+          newComment: "",
+        });
+      })
+      .catch((errorMessage) => console.log(errorMessage, "error"));
   }
 
   render() {
