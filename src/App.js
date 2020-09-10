@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client";
 
-import GET_POSTS from "./queries/getPosts";
 import "./App.scss";
 
 import FeedWall from "./FeedWall";

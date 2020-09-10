@@ -1,5 +1,5 @@
 $backround-color: #EEEEEE;
-$newsfeed-background: #4a91c3ba;
+$newsfeed-background: #1eacd2;
 $white-color: #FFFFFF;
 
 body {
@@ -23,6 +23,7 @@ body {
     margin: 20px auto;
     min-height: 150px;
     padding: 20px;
+    position: relative;
   }
 
   &__author-image {
@@ -52,6 +53,16 @@ body {
   
   &__description {
     text-align: start;
+    margin-top: 10px;
+  }
+
+  &__reaction {
+    display: flex;
+    justify-content: space-between;
+    text-align: start;
+    position: absolute;
+    bottom: 15px;
+    width: 40px;
   }
   
 }
@@ -72,6 +83,14 @@ body {
     font-size: 16px;
     font-weight: 500;
   }
+}
+
+.loader {
+  display: flex;
+  margin: 0 auto;
+  align-items: center;
+  position: relative;
+  transform: translateY(95%);
 }
 
 
