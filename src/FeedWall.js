@@ -8,6 +8,8 @@ import GET_POSTS from "./queries/getPosts";
 import CREATE_POST from "./mutations/createPost";
 import TOGGLE_LIKE from "./mutations/toggleLike";
 
+const REFETCH_QUERY = "cache-and-network";
+
 // HOMMER
 const LOGGED_USER_ID = "FWo8IHV1NKvfRU2VY9Em";
 
@@ -79,7 +81,7 @@ class FeedWall extends React.Component {
     this.props.client
       .query({
         query: GET_POSTS,
-        options: { fetchPolicy: "cache-and-network" },
+        options: { fetchPolicy: REFETCH_QUERY },
       })
       .then(({ data }) => {
         this.setState({ newsFeed: data.posts, isLoading: false });
@@ -100,7 +102,7 @@ class FeedWall extends React.Component {
       .mutate({
         mutation: TOGGLE_LIKE,
         variables: { postId, userId: LOGGED_USER_ID },
-        options: { fetchPolicy: "cache-and-network" },
+        options: { fetchPolicy: REFETCH_QUERY },
       })
       .then(() => {
         const { newsFeed } = this.state;
@@ -135,7 +137,7 @@ class FeedWall extends React.Component {
       .mutate({
         mutation: CREATE_POST,
         variables: postCommentObject,
-        refetchQuery: "cache-and-network",
+        refetchQuery: REFETCH_QUERY,
       })
       .then(({ data: { createPost } }) => {
         const newsFeed = [...this.state.newsFeed, createPost];
