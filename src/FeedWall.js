@@ -1,14 +1,12 @@
 import React from "react";
 import moment from "moment";
 
-import { ReactComponent as ReactionInActive } from "../src/assets/reactionInActive.svg";
-import { ReactComponent as ReactionActive } from "../src/assets/reactionActive.svg";
-
 import GET_POSTS from "./queries/getPosts";
 import CREATE_POST from "./mutations/createPost";
 import TOGGLE_LIKE from "./mutations/toggleLike";
 
-const REFETCH_QUERY = "cache-and-network";
+// const REFETCH_QUERY = "cache-and-network";
+const REFETCH_QUERY = "cache-only";
 
 // HOMMER
 const LOGGED_USER_ID = "FWo8IHV1NKvfRU2VY9Em";
@@ -49,14 +47,20 @@ class Feed extends React.Component {
             <React.Fragment>
               <span>{feed && feed.reactions && feed.reactions.length} </span>
               <span onClick={() => this.props.handleReaction(true, feed.id)}>
-                <ReactionActive></ReactionActive>
+                <img
+                  src="https://clipart.info/images/ccovers/1496175211emoji-android-heavy-black-heart.png"
+                  alt="reactionActive"
+                ></img>
               </span>
             </React.Fragment>
           ) : (
             <React.Fragment>
               <span>{feed && feed.reactions && feed.reactions.length} </span>
               <span onClick={() => this.props.handleReaction(false, feed.id)}>
-                <ReactionInActive></ReactionInActive>
+                <img
+                  src="https://iconsetc.com/icons-watermarks/simple-black/foundation/foundation_heart/foundation_heart_simple-black_512x512.png"
+                  alt="reactionInactive"
+                ></img>
               </span>
             </React.Fragment>
           )}
@@ -85,6 +89,9 @@ class FeedWall extends React.Component {
       })
       .then(({ data }) => {
         this.setState({ newsFeed: data.posts, isLoading: false });
+      })
+      .catch((err) => {
+        this.setState({ isLoading: false });
       });
   }
 
@@ -168,7 +175,7 @@ class FeedWall extends React.Component {
       <div className="news-feed">
         <div className="news-feed__title">Feed</div>
 
-        {newsFeed.map((feed, index) => (
+        {(newsFeed || []).map((feed, index) => (
           <Feed
             key={index}
             feed={feed}
