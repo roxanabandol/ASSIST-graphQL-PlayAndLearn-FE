@@ -186,6 +186,7 @@ class FeedWall extends React.Component {
   }
 
   render() {
+    console.log("render feed wall");
     const { newsFeed, newComment, isLoading } = this.state;
 
     if (isLoading && this.isOnline()) {

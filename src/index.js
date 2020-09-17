@@ -6,18 +6,19 @@ import "regenerator-runtime/runtime";
 import { ApolloProvider } from "@apollo/client";
 
 import App from "./App";
-import client from "./apollo.config";
+import apolloInstances from "./apollo.config";
 import * as serviceWorker from "./serviceWorker";
 
 import { ApolloProvider as ApolloHooksProvider } from "@apollo/react-hooks";
 
 import "./index.scss";
+const { queueLinkInstance } = apolloInstances;
 
 ReactDOM.render(
-  <ApolloProvider client={client}>
-    <ApolloHooksProvider client={client}>
+  <ApolloProvider client={apolloInstances.client}>
+    <ApolloHooksProvider client={apolloInstances.client}>
       <Router>
-        <App />
+        <App queueLink={queueLinkInstance} />
       </Router>
     </ApolloHooksProvider>
   </ApolloProvider>,

@@ -1,18 +1,15 @@
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import {
+  ApolloClient,
+  InMemoryCache,
+  HttpLink,
+  ApolloLink,
+} from "@apollo/client";
 import { RetryLink } from "apollo-link-retry";
 import { persistCache } from "apollo-cache-persist";
 import QueueLink from "apollo-link-queue";
 import getApolloLink from "./apollo.link";
 
-const offlineLink = new QueueLink();
-window.addEventListener("offline", () => {
-  console.log("offline");
-  offlineLink.close();
-});
-window.addEventListener("online", () => {
-  console.log("offline");
-  offlineLink.open();
-});
+const queueLink = new QueueLink();
 
 const cache = new InMemoryCache();
 const http = new HttpLink({
@@ -29,19 +26,19 @@ const retry = new RetryLink({
 });
 // const link = concat(retry, http);
 
-// const link = ApolloLink.from([
-//   // new RetryLink(),
-//   retry,
-//   offlineLink,
-//   http,
-//   // new HttpLink({ uri: cache }),
-// ]);
+const link = ApolloLink.from([
+  // new RetryLink(),
+  retry,
+  queueLink,
+  http,
+  // new HttpLink({ uri: cache }),
+]);
 persistCache({
   cache,
   storage: window.localStorage,
 });
 console.log(getApolloLink);
-const link = getApolloLink(cache);
+// const link = getApolloLink(cache);
 
 const client = new ApolloClient({
   link,
@@ -53,4 +50,4 @@ const client = new ApolloClient({
   },
 });
 
-export default client;
+export default { client, queueLinkInstance: queueLink };
