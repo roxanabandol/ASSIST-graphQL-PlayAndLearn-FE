@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-const CREATE_POST = gql`
+const TOGGLE_LIKE = gql`
   mutation($postId: String!, $userId: String!) {
     toggleLike(postId: $postId, userId: $userId) {
       message
@@ -8,4 +8,4 @@ const CREATE_POST = gql`
   }
 `;
 
-export default CREATE_POST;
+export default TOGGLE_LIKE;

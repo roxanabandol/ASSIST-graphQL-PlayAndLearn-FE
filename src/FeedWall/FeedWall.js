@@ -1,12 +1,10 @@
 import React from "react";
 import moment from "moment";
 
-import GET_POSTS from "./queries/getPosts";
-import CREATE_POST from "./mutations/createPost";
-import TOGGLE_LIKE from "./mutations/toggleLike";
+import CREATE_POST from "../mutations/createPost";
 
-// const REFETCH_QUERY = "cache-and-network";
-const REFETCH_QUERY = "cache-only";
+const REFETCH_QUERY = "network-only";
+// const REFETCH_QUERY = "cache-only";
 
 // HOMMER
 const LOGGED_USER_ID = "FWo8IHV1NKvfRU2VY9Em";
@@ -77,22 +75,15 @@ class FeedWall extends React.Component {
     isLoading: true,
   };
 
-  componentDidMount() {
-    this.getPosts();
+  isOnline() {
+    return navigator.onLine != null ? navigator.onLine : true;
   }
 
-  getPosts() {
-    this.props.client
-      .query({
-        query: GET_POSTS,
-        options: { fetchPolicy: REFETCH_QUERY },
-      })
-      .then(({ data }) => {
-        this.setState({ newsFeed: data.posts, isLoading: false });
-      })
-      .catch((err) => {
-        this.setState({ isLoading: false });
-      });
+  componentWillReceiveProps({ isLoading, posts }) {
+    this.setState({ isLoading });
+    if (this.state.newsFeed !== posts) {
+      this.setState({ newsFeed: posts });
+    }
   }
 
   handleInputChange({ target }) {
@@ -105,20 +96,15 @@ class FeedWall extends React.Component {
   handleReaction(check, postId) {
     this.setState({ isLoading: true });
 
-    this.props.client
-      .mutate({
-        mutation: TOGGLE_LIKE,
-        variables: { postId, userId: LOGGED_USER_ID },
-        options: { fetchPolicy: REFETCH_QUERY },
-      })
+    this.props
+      .toggleLike({ postId, userId: LOGGED_USER_ID })
       .then(() => {
         const { newsFeed } = this.state;
-
+        console.log("offline handle reactions");
         const updateArrByStatus = (check, reactions) =>
           !check
             ? [...reactions, LOGGED_USER_ID]
             : reactions.filter((userIdArr) => userIdArr !== LOGGED_USER_ID);
-
         const newsFeedChanged = newsFeed.map((feed) => {
           if (feed.id === postId) {
             return {
@@ -128,10 +114,52 @@ class FeedWall extends React.Component {
           }
           return feed;
         });
-
         this.setState({ newsFeed: newsFeedChanged, isLoading: false });
       })
-      .catch(() => this.setState({ isLoading: false }));
+      .catch(() => {
+        this.setState({ isLoading: false });
+        console.log("catch");
+      })
+      .finally(() => {
+        console.log("finally");
+      });
+    // this.props.client
+    //   .mutate({
+    //     mutation: TOGGLE_LIKE,
+    //     variables: { postId, userId: LOGGED_USER_ID },
+    //     refetchQueries: () => [
+    //       { query: GET_POSTS, options: { fetchPolicy: "no-cache" } },
+    //     ],
+    //     awaitRefetchQueries: true,
+    //     optimisticResponse: {
+    //       message: "Success!",
+    //     },
+    //   })
+    //   .then(() => {
+    //     const { newsFeed } = this.state;
+    //     console.log("offline handle reactions");
+    //     const updateArrByStatus = (check, reactions) =>
+    //       !check
+    //         ? [...reactions, LOGGED_USER_ID]
+    //         : reactions.filter((userIdArr) => userIdArr !== LOGGED_USER_ID);
+    //     const newsFeedChanged = newsFeed.map((feed) => {
+    //       if (feed.id === postId) {
+    //         return {
+    //           ...feed,
+    //           reactions: [...updateArrByStatus(check, feed.reactions)],
+    //         };
+    //       }
+    //       return feed;
+    //     });
+    //     this.setState({ newsFeed: newsFeedChanged, isLoading: false });
+    //   })
+    //   .catch(() => {
+    //     this.setState({ isLoading: false });
+    //     console.log("catch");
+    //   })
+    //   .finally(() => {
+    //     console.log("finally");
+    //   });
   }
 
   handlePost() {
@@ -144,7 +172,6 @@ class FeedWall extends React.Component {
       .mutate({
         mutation: CREATE_POST,
         variables: postCommentObject,
-        refetchQuery: REFETCH_QUERY,
       })
       .then(({ data: { createPost } }) => {
         const newsFeed = [...this.state.newsFeed, createPost];
@@ -161,7 +188,7 @@ class FeedWall extends React.Component {
   render() {
     const { newsFeed, newComment, isLoading } = this.state;
 
-    if (isLoading) {
+    if (isLoading && this.isOnline()) {
       return (
         <img
           className="loader"
