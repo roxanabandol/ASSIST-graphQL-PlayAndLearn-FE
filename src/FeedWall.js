@@ -81,6 +81,10 @@ class FeedWall extends React.Component {
     this.getPosts();
   }
 
+  isOnline() {
+    return navigator.onLine != null ? navigator.onLine : true;
+  }
+
   getPosts() {
     this.props.client
       .query({
@@ -109,7 +113,6 @@ class FeedWall extends React.Component {
       .mutate({
         mutation: TOGGLE_LIKE,
         variables: { postId, userId: LOGGED_USER_ID },
-        options: { fetchPolicy: REFETCH_QUERY },
       })
       .then(() => {
         const { newsFeed } = this.state;
@@ -144,7 +147,6 @@ class FeedWall extends React.Component {
       .mutate({
         mutation: CREATE_POST,
         variables: postCommentObject,
-        refetchQuery: REFETCH_QUERY,
       })
       .then(({ data: { createPost } }) => {
         const newsFeed = [...this.state.newsFeed, createPost];
@@ -161,7 +163,7 @@ class FeedWall extends React.Component {
   render() {
     const { newsFeed, newComment, isLoading } = this.state;
 
-    if (isLoading) {
+    if (isLoading && this.isOnline()) {
       return (
         <img
           className="loader"

@@ -1,6 +1,12 @@
 import React, { Component } from "react";
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
-import { ApolloProvider } from "@apollo/client";
+import {
+  ApolloClient,
+  ApolloProvider,
+  InMemoryCache,
+  HttpLink,
+  concat,
+} from "@apollo/client";
+import { RetryLink } from "apollo-link-retry";
 import { persistCache } from "apollo-cache-persist";
 import "./App.scss";
 
@@ -12,25 +18,30 @@ class App extends Component {
   async componentDidMount() {
     const cache = new InMemoryCache();
 
+    const http = new HttpLink({
+      uri:
+        "https://us-central1-assist-gql-presentation.cloudfunctions.net/graphql",
+    });
+
+    const retry = new RetryLink({
+      attempts: { max: Infinity },
+      delay: {
+        initial: 300,
+        max: Infinity,
+        jitter: true,
+      },
+    });
+    const link = concat(retry, http);
     await persistCache({
       cache,
       storage: window.localStorage,
     });
 
     const client = new ApolloClient({
-      uri:
-        "https://us-central1-assist-gql-presentation.cloudfunctions.net/graphql",
+      link,
       cache,
     });
     this.setState({ client });
-
-    window.addEventListener("online", () => {
-      window.location.reload();
-    });
-
-    window.addEventListener("offline", () => {
-      window.location.reload();
-    });
   }
 
   render() {
