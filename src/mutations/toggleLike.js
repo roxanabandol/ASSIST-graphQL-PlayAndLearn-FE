@@ -1,4 +1,4 @@
-import { gql } from "@apollo/client";
+import { gql } from "apollo-boost";
 
 const CREATE_POST = gql`
   mutation($postId: String!, $userId: String!) {

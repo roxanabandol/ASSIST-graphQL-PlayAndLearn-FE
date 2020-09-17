@@ -4,9 +4,10 @@ import moment from "moment";
 import GET_POSTS from "./queries/getPosts";
 import CREATE_POST from "./mutations/createPost";
 import TOGGLE_LIKE from "./mutations/toggleLike";
+import { Query, Mutation } from "react-apollo";
 
-// const REFETCH_QUERY = "cache-and-network";
-const REFETCH_QUERY = "cache-only";
+const REFETCH_QUERY = "network-only";
+const REFETCH_QUERY_OFFLINE = "cache-only";
 
 // HOMMER
 const LOGGED_USER_ID = "FWo8IHV1NKvfRU2VY9Em";
@@ -21,6 +22,36 @@ const LOGGED_USER_ID = "FWo8IHV1NKvfRU2VY9Em";
 // const LOGGED_USER_ID = "WQo7bneC4enAm3GomIiE";
 
 class Feed extends React.Component {
+  ToggleLike = ({ feed, srcImage }) => {
+    console.log(feed && feed.id, "feed");
+    return (
+      <React.Fragment>
+        <span>{feed && feed.reactions && feed.reactions.length} </span>
+
+        <Mutation
+          mutation={TOGGLE_LIKE}
+          refetchQueries={() => [{ query: GET_POSTS }]}
+        >
+          {(toggleLike, { data }) => (
+            <>
+              <span
+                onClick={() =>
+                  toggleLike({
+                    variables: {
+                      postId: feed && feed.id,
+                      userId: LOGGED_USER_ID,
+                    },
+                  })
+                }
+              >
+                <img src={srcImage} alt="reactionImage"></img>
+              </span>
+            </>
+          )}
+        </Mutation>
+      </React.Fragment>
+    );
+  };
   render() {
     const { feed, index } = this.props;
 
@@ -43,27 +74,19 @@ class Feed extends React.Component {
         <div className="news-feed__description">{feed.description}</div>
 
         <div className="news-feed__reaction">
-          {feed.reactions.includes(LOGGED_USER_ID) ? (
-            <React.Fragment>
-              <span>{feed && feed.reactions && feed.reactions.length} </span>
-              <span onClick={() => this.props.handleReaction(true, feed.id)}>
-                <img
-                  src="https://clipart.info/images/ccovers/1496175211emoji-android-heavy-black-heart.png"
-                  alt="reactionActive"
-                ></img>
-              </span>
-            </React.Fragment>
-          ) : (
-            <React.Fragment>
-              <span>{feed && feed.reactions && feed.reactions.length} </span>
-              <span onClick={() => this.props.handleReaction(false, feed.id)}>
-                <img
-                  src="https://iconsetc.com/icons-watermarks/simple-black/foundation/foundation_heart/foundation_heart_simple-black_512x512.png"
-                  alt="reactionInactive"
-                ></img>
-              </span>
-            </React.Fragment>
-          )}
+          {feed && feed.reactions.includes(LOGGED_USER_ID)
+            ? feed && (
+                <this.ToggleLike
+                  feed={feed}
+                  srcImage="https://clipart.info/images/ccovers/1496175211emoji-android-heavy-black-heart.png"
+                />
+              )
+            : feed && (
+                <this.ToggleLike
+                  feed={feed}
+                  srcImage="https://iconsetc.com/icons-watermarks/simple-black/foundation/foundation_heart/foundation_heart_simple-black_512x512.png"
+                />
+              )}
         </div>
       </div>
     );
@@ -77,26 +100,8 @@ class FeedWall extends React.Component {
     isLoading: true,
   };
 
-  componentDidMount() {
-    this.getPosts();
-  }
-
   isOnline() {
     return navigator.onLine != null ? navigator.onLine : true;
-  }
-
-  getPosts() {
-    this.props.client
-      .query({
-        query: GET_POSTS,
-        options: { fetchPolicy: REFETCH_QUERY },
-      })
-      .then(({ data }) => {
-        this.setState({ newsFeed: data.posts, isLoading: false });
-      })
-      .catch((err) => {
-        this.setState({ isLoading: false });
-      });
   }
 
   handleInputChange({ target }) {
@@ -106,87 +111,40 @@ class FeedWall extends React.Component {
     this.setState({ [name]: value });
   }
 
-  handleReaction(check, postId) {
-    this.setState({ isLoading: true });
-
-    this.props.client
-      .mutate({
-        mutation: TOGGLE_LIKE,
-        variables: { postId, userId: LOGGED_USER_ID },
-      })
-      .then(() => {
-        const { newsFeed } = this.state;
-
-        const updateArrByStatus = (check, reactions) =>
-          !check
-            ? [...reactions, LOGGED_USER_ID]
-            : reactions.filter((userIdArr) => userIdArr !== LOGGED_USER_ID);
-
-        const newsFeedChanged = newsFeed.map((feed) => {
-          if (feed.id === postId) {
-            return {
-              ...feed,
-              reactions: [...updateArrByStatus(check, feed.reactions)],
-            };
-          }
-          return feed;
-        });
-
-        this.setState({ newsFeed: newsFeedChanged, isLoading: false });
-      })
-      .catch(() => this.setState({ isLoading: false }));
-  }
-
-  handlePost() {
-    const postCommentObject = {
-      user: LOGGED_USER_ID,
-      description: this.state.newComment,
-    };
-
-    this.props.client
-      .mutate({
-        mutation: CREATE_POST,
-        variables: postCommentObject,
-      })
-      .then(({ data: { createPost } }) => {
-        const newsFeed = [...this.state.newsFeed, createPost];
-
-        this.setState({
-          newsFeed,
-          newComment: "",
-          isLoading: false,
-        });
-      })
-      .catch(() => this.setState({ isLoading: false }));
+  handleNewPostCreation() {
+    this.setState({
+      newComment: "",
+      isLoading: false,
+    });
   }
 
   render() {
-    const { newsFeed, newComment, isLoading } = this.state;
-
-    if (isLoading && this.isOnline()) {
-      return (
-        <img
-          className="loader"
-          src="https://media2.giphy.com/media/3y0oCOkdKKRi0/giphy.gif"
-          alt="loader"
-        ></img>
-      );
-    }
+    const { newComment, isLoading } = this.state;
 
     return (
       <div className="news-feed">
         <div className="news-feed__title">Feed</div>
+        <Query
+          query={GET_POSTS}
+          fetchPolicy={this.isOnline() ? REFETCH_QUERY : REFETCH_QUERY_OFFLINE}
+        >
+          {({ data }) => {
+            data &&
+              data.isLoading !== isLoading &&
+              this.setState({ isLoading: data.isLoading });
+            return ((data && data.posts) || []).map((feed, index) => (
+              <Feed key={index} feed={feed} index={index}></Feed>
+            ));
+          }}
+        </Query>
 
-        {(newsFeed || []).map((feed, index) => (
-          <Feed
-            key={index}
-            feed={feed}
-            index={index}
-            handleReaction={(check, postId) =>
-              this.handleReaction(check, postId)
-            }
-          ></Feed>
-        ))}
+        {isLoading && this.isOnline() && (
+          <img
+            className="loader"
+            src="https://media2.giphy.com/media/3y0oCOkdKKRi0/giphy.gif"
+            alt="loader"
+          ></img>
+        )}
 
         <div className="comment-section">
           <textarea
@@ -198,13 +156,30 @@ class FeedWall extends React.Component {
             onChange={(event) => this.handleInputChange(event)}
           ></textarea>
 
-          <button
-            className="comment-section__submit-button"
-            type="submit"
-            onClick={() => this.handlePost()}
+          <Mutation
+            mutation={CREATE_POST}
+            onCompleted={() => this.handleNewPostCreation()}
+            refetchQueries={() => [{ query: GET_POSTS }]}
           >
-            SUBMIT
-          </button>
+            {(addPost, { data }) => (
+              <>
+                <button
+                  className="comment-section__submit-button"
+                  type="submit"
+                  onClick={() =>
+                    addPost({
+                      variables: {
+                        user: LOGGED_USER_ID,
+                        description: this.state.newComment,
+                      },
+                    })
+                  }
+                >
+                  SUBMIT
+                </button>
+              </>
+            )}
+          </Mutation>
         </div>
       </div>
     );

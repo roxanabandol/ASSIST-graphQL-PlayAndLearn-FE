@@ -1,14 +1,9 @@
 import React, { Component } from "react";
-import {
-  ApolloClient,
-  ApolloProvider,
-  InMemoryCache,
-  HttpLink,
-  concat,
-} from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink, concat } from "apollo-boost";
 import { RetryLink } from "apollo-link-retry";
 import { persistCache } from "apollo-cache-persist";
 import "./App.scss";
+import { ApolloProvider } from "react-apollo";
 
 import FeedWall from "./FeedWall";
 
