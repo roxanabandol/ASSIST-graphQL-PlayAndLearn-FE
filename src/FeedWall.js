@@ -142,9 +142,11 @@ class FeedWall extends React.Component {
           {({ data, loading }) => {
             loading !== isLoading && this.setState({ isLoading: loading });
 
-            return ((data && data.posts) || []).map((feed, index) => (
-              <Feed key={index} feed={feed} index={index}></Feed>
-            ));
+            return ((data && data.posts) || [])
+              .sort((a, b) => a.date - b.date)
+              .map((feed, index) => (
+                <Feed key={index} feed={feed} index={index}></Feed>
+              ));
           }}
         </Query>
         {isLoading && (
