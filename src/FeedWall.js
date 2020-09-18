@@ -23,7 +23,6 @@ const LOGGED_USER_ID = "FWo8IHV1NKvfRU2VY9Em";
 
 class Feed extends React.Component {
   ToggleLike = ({ feed, srcImage }) => {
-    console.log(feed && feed.id, "feed");
     return (
       <React.Fragment>
         <span>{feed && feed.reactions && feed.reactions.length} </span>
@@ -32,22 +31,24 @@ class Feed extends React.Component {
           mutation={TOGGLE_LIKE}
           refetchQueries={() => [{ query: GET_POSTS }]}
         >
-          {(toggleLike, { data }) => (
-            <>
-              <span
-                onClick={() =>
-                  toggleLike({
-                    variables: {
-                      postId: feed && feed.id,
-                      userId: LOGGED_USER_ID,
-                    },
-                  })
-                }
-              >
-                <img src={srcImage} alt="reactionImage"></img>
-              </span>
-            </>
-          )}
+          {(toggleLike) => {
+            return (
+              <>
+                <span
+                  onClick={() =>
+                    toggleLike({
+                      variables: {
+                        postId: feed && feed.id,
+                        userId: LOGGED_USER_ID,
+                      },
+                    })
+                  }
+                >
+                  <img src={srcImage} alt="reactionImage"></img>
+                </span>
+              </>
+            );
+          }}
         </Mutation>
       </React.Fragment>
     );
@@ -97,7 +98,7 @@ class FeedWall extends React.Component {
   state = {
     newsFeed: [],
     newComment: "",
-    isLoading: true,
+    isLoading: false,
   };
 
   isOnline() {
@@ -123,22 +124,30 @@ class FeedWall extends React.Component {
 
     return (
       <div className="news-feed">
-        <div className="news-feed__title">Feed</div>
+        {!isLoading && (
+          <div className="news-feed-title">
+            <span
+              className={`news-feed-title__status news-feed-title__${
+                this.isOnline() ? "green" : "red"
+              }`}
+            ></span>
+            <div className="news-feed-title__title">Feed</div>
+          </div>
+        )}
         <Query
           query={GET_POSTS}
           fetchPolicy={this.isOnline() ? REFETCH_QUERY : REFETCH_QUERY_OFFLINE}
+          onCompleted={() => this.setState({ isLoading: false })}
         >
-          {({ data }) => {
-            data &&
-              data.isLoading !== isLoading &&
-              this.setState({ isLoading: data.isLoading });
+          {({ data, loading }) => {
+            loading !== isLoading && this.setState({ isLoading: loading });
+
             return ((data && data.posts) || []).map((feed, index) => (
               <Feed key={index} feed={feed} index={index}></Feed>
             ));
           }}
         </Query>
-
-        {isLoading && this.isOnline() && (
+        {isLoading && (
           <img
             className="loader"
             src="https://media2.giphy.com/media/3y0oCOkdKKRi0/giphy.gif"
@@ -146,41 +155,43 @@ class FeedWall extends React.Component {
           ></img>
         )}
 
-        <div className="comment-section">
-          <textarea
-            className="comment-section__textarea"
-            name="newComment"
-            rows="4"
-            cols="50"
-            value={newComment}
-            onChange={(event) => this.handleInputChange(event)}
-          ></textarea>
+        {!isLoading && (
+          <div className="comment-section">
+            <textarea
+              className="comment-section__textarea"
+              name="newComment"
+              rows="4"
+              cols="50"
+              value={newComment}
+              onChange={(event) => this.handleInputChange(event)}
+            ></textarea>
 
-          <Mutation
-            mutation={CREATE_POST}
-            onCompleted={() => this.handleNewPostCreation()}
-            refetchQueries={() => [{ query: GET_POSTS }]}
-          >
-            {(addPost, { data }) => (
-              <>
-                <button
-                  className="comment-section__submit-button"
-                  type="submit"
-                  onClick={() =>
-                    addPost({
-                      variables: {
-                        user: LOGGED_USER_ID,
-                        description: this.state.newComment,
-                      },
-                    })
-                  }
-                >
-                  SUBMIT
-                </button>
-              </>
-            )}
-          </Mutation>
-        </div>
+            <Mutation
+              mutation={CREATE_POST}
+              onCompleted={() => this.handleNewPostCreation()}
+              refetchQueries={() => [{ query: GET_POSTS }]}
+            >
+              {(addPost) => (
+                <>
+                  <button
+                    className="comment-section__submit-button"
+                    type="submit"
+                    onClick={() =>
+                      addPost({
+                        variables: {
+                          user: LOGGED_USER_ID,
+                          description: this.state.newComment,
+                        },
+                      })
+                    }
+                  >
+                    SUBMIT
+                  </button>
+                </>
+              )}
+            </Mutation>
+          </div>
+        )}
       </div>
     );
   }

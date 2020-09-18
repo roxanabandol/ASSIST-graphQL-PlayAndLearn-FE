@@ -6,7 +6,6 @@ import * as serviceWorker from "./serviceWorker";
 import { BrowserRouter as Router } from "react-router-dom";
 import "regenerator-runtime/runtime";
 
-console.log("here!");
 ReactDOM.render(
   <Router>
     <App />
